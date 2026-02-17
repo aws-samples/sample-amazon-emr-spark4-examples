@@ -17,4 +17,5 @@ This library is licensed under the MIT-0 License. See the LICENSE file.
 
 ## Disclaimer
 
-The examples provided in this repository are not supported by AWS EMR. The use of this code is your responsibility and at your own risk.
+These examples are provided for educational and reference purposes. They are not production-ready and are not covered by AWS Support. Please review and test thoroughly before using in your own environments.
+
