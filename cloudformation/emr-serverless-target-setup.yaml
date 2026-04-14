@@ -1,0 +1,104 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  EMR Serverless Application and Execution Role for Spark Upgrade Validation.
+  Creates a target EMR Serverless application (Spark 4.0) and an execution role
+  with S3 and CloudWatch Logs access for running validation jobs.
+
+Parameters:
+  StagingBucketName:
+    Type: String
+    Description: >
+      Name of the S3 staging bucket created by the spark-upgrade-mcp-setup stack
+      (found in that stack's Outputs as StagingBucketName).
+    AllowedPattern: '^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$'
+
+  ApplicationName:
+    Type: String
+    Default: 'spark4-upgrade-target'
+    Description: Name for the EMR Serverless application
+
+  ReleaseLabel:
+    Type: String
+    Default: 'emr-spark-8.0-preview'
+    Description: EMR release label for the target Spark version
+
+Resources:
+  EMRServerlessExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${ApplicationName}-exec-role'
+      Description: Execution role for EMR Serverless validation jobs
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: emr-serverless.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: S3Access
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: BucketObjectAccess
+                Effect: Allow
+                Action:
+                  - 's3:GetObject'
+                  - 's3:PutObject'
+                  - 's3:DeleteObject'
+                Resource:
+                  - !Sub 'arn:aws:s3:::${StagingBucketName}/*'
+              - Sid: BucketListAccess
+                Effect: Allow
+                Action:
+                  - 's3:ListBucket'
+                  - 's3:GetBucketLocation'
+                Resource:
+                  - !Sub 'arn:aws:s3:::${StagingBucketName}'
+        - PolicyName: CloudWatchLogs
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'logs:CreateLogGroup'
+                  - 'logs:CreateLogStream'
+                  - 'logs:PutLogEvents'
+                  - 'logs:DescribeLogGroups'
+                  - 'logs:DescribeLogStreams'
+                Resource:
+                  - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/emr-serverless:*'
+
+  EMRServerlessApplication:
+    Type: AWS::EMRServerless::Application
+    Properties:
+      Name: !Ref ApplicationName
+      ReleaseLabel: !Ref ReleaseLabel
+      Type: SPARK
+      AutoStartConfiguration:
+        Enabled: true
+      AutoStopConfiguration:
+        Enabled: true
+        IdleTimeoutMinutes: 15
+
+Outputs:
+  ApplicationId:
+    Description: EMR Serverless Application ID — use this in your upgrade prompt
+    Value: !Ref EMRServerlessApplication
+    Export:
+      Name: !Sub '${AWS::StackName}-ApplicationId'
+
+  ExecutionRoleArn:
+    Description: Execution Role ARN — use this in your upgrade prompt
+    Value: !GetAtt EMRServerlessExecutionRole.Arn
+    Export:
+      Name: !Sub '${AWS::StackName}-ExecutionRoleArn'
+
+  UpgradePrompt:
+    Description: Copy this prompt into your IDE to start the upgrade
+    Value: !Sub >
+      Upgrade my Spark application at <path-to-project>
+      from EMR serverless version 6.15.0 to EMR serverless version 8.0.0.
+      Use EMR Serverless app-id ${EMRServerlessApplication} and execution role
+      ${EMRServerlessExecutionRole.Arn} for validation.
+      Store artifacts at s3://${StagingBucketName}/spark4-upgrade/python/
