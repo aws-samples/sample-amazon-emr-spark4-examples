@@ -139,7 +139,7 @@ class VehicleTelemetryProcessor:
         df.coalesce(4) \
             .write \
             .mode("overwrite") \
-            .option("compression", "lz4_raw") \
+            .option("compression", "lz4raw") \
             .partitionBy("vehicle_id") \
             .parquet(output_path)
     

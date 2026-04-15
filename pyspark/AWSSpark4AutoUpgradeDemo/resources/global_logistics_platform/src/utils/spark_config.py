@@ -15,12 +15,11 @@ def create_spark_session(app_name: str, enable_legacy_datetime: bool = False) ->
         .appName(app_name) \
         .config("spark.sql.adaptive.enabled", "true") \
         .config("spark.sql.adaptive.coalescePartitions.enabled", "true") \
-        .config("spark.sql.parquet.compression.codec", "snappy") \
-        .config("spark.sql.ansi.enabled", "false")
+        .config("spark.sql.parquet.compression.codec", "snappy")
     
     if enable_legacy_datetime:
         builder = builder \
-            .config("spark.sql.parquet.datetimeRebaseModeInWrite", "LEGACY")
+            .config("spark.sql.legacy.parquet.datetimeRebaseModeInWrite", "LEGACY")
     
     return builder.getOrCreate()
 

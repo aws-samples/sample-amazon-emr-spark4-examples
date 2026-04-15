@@ -1,8 +1,8 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: >
-  EMR Serverless Application and Execution Role for Spark Upgrade Validation.
-  Creates a target EMR Serverless application (Spark 4.0) and an execution role
-  with S3 and CloudWatch Logs access for running validation jobs.
+  EMR Serverless Applications and Execution Role for Spark Upgrade Validation.
+  Creates source and target EMR Serverless applications with a shared execution role
+  for running upgrade validation jobs and data quality checks.
 
 Parameters:
   StagingBucketName:
@@ -12,22 +12,32 @@ Parameters:
       (found in that stack's Outputs as StagingBucketName).
     AllowedPattern: '^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$'
 
-  ApplicationName:
+  SourceApplicationName:
     Type: String
-    Default: 'spark4-upgrade-target'
-    Description: Name for the EMR Serverless application
+    Default: 'spark-upgrade-source'
+    Description: Name for the source EMR Serverless application
 
-  ReleaseLabel:
+  TargetApplicationName:
+    Type: String
+    Default: 'spark-upgrade-target'
+    Description: Name for the target EMR Serverless application
+
+  SourceReleaseLabel:
+    Type: String
+    Default: 'emr-7.0.0'
+    Description: EMR release label for the source Spark version (e.g., emr-7.0.0 for Spark 3.5.0)
+
+  TargetReleaseLabel:
     Type: String
     Default: 'emr-spark-8.0-preview'
-    Description: EMR release label for the target Spark version
+    Description: EMR release label for the target Spark version (e.g., emr-spark-8.0-preview for Spark 4.0.1)
 
 Resources:
   EMRServerlessExecutionRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub '${ApplicationName}-exec-role'
-      Description: Execution role for EMR Serverless validation jobs
+      RoleName: !Sub '${TargetApplicationName}-exec-role'
+      Description: Shared execution role for source and target EMR Serverless validation jobs
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -69,11 +79,23 @@ Resources:
                 Resource:
                   - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/emr-serverless:*'
 
-  EMRServerlessApplication:
+  SourceEMRServerlessApplication:
     Type: AWS::EMRServerless::Application
     Properties:
-      Name: !Ref ApplicationName
-      ReleaseLabel: !Ref ReleaseLabel
+      Name: !Ref SourceApplicationName
+      ReleaseLabel: !Ref SourceReleaseLabel
+      Type: SPARK
+      AutoStartConfiguration:
+        Enabled: true
+      AutoStopConfiguration:
+        Enabled: true
+        IdleTimeoutMinutes: 15
+
+  TargetEMRServerlessApplication:
+    Type: AWS::EMRServerless::Application
+    Properties:
+      Name: !Ref TargetApplicationName
+      ReleaseLabel: !Ref TargetReleaseLabel
       Type: SPARK
       AutoStartConfiguration:
         Enabled: true
@@ -82,23 +104,20 @@ Resources:
         IdleTimeoutMinutes: 15
 
 Outputs:
-  ApplicationId:
-    Description: EMR Serverless Application ID — use this in your upgrade prompt
-    Value: !Ref EMRServerlessApplication
+  SourceApplicationId:
+    Description: Source EMR Serverless Application ID — used for data quality baseline
+    Value: !Ref SourceEMRServerlessApplication
     Export:
-      Name: !Sub '${AWS::StackName}-ApplicationId'
+      Name: !Sub '${AWS::StackName}-SourceApplicationId'
+
+  TargetApplicationId:
+    Description: Target EMR Serverless Application ID — used for upgrade validation
+    Value: !Ref TargetEMRServerlessApplication
+    Export:
+      Name: !Sub '${AWS::StackName}-TargetApplicationId'
 
   ExecutionRoleArn:
-    Description: Execution Role ARN — use this in your upgrade prompt
+    Description: Shared Execution Role ARN — used for both source and target jobs
     Value: !GetAtt EMRServerlessExecutionRole.Arn
     Export:
       Name: !Sub '${AWS::StackName}-ExecutionRoleArn'
-
-  UpgradePrompt:
-    Description: Copy this prompt into your IDE to start the upgrade
-    Value: !Sub >
-      Upgrade my Spark application at <path-to-project>
-      from EMR serverless version 6.15.0 to EMR serverless version 8.0.0.
-      Use EMR Serverless app-id ${EMRServerlessApplication} and execution role
-      ${EMRServerlessExecutionRole.Arn} for validation.
-      Store artifacts at s3://${StagingBucketName}/spark4-upgrade/python/

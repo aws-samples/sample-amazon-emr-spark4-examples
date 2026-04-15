@@ -74,15 +74,15 @@ class InternationalShipmentProcessor:
         Encode text using regional charset
         Supported charsets in 4.0: US-ASCII, ISO-8859-1, UTF-8, UTF-16BE, UTF-16LE, UTF-16, UTF-32
         """
-        # Process Japanese addresses with UTF-8 (Shift_JIS not supported in Spark 4.0)
+        # Process Japanese addresses with Shift_JIS
         df = df.withColumn(
             "shipper_address_normalized",
             when(col("origin_country") == "JP",
-                 expr("decode(encode(shipper_address, 'UTF-8'), 'UTF-8')"))
+                 expr("decode(encode(shipper_address, 'Shift_JIS'), 'UTF-8')"))
             .when(col("origin_country") == "CN",
-                 expr("decode(encode(shipper_address, 'UTF-8'), 'UTF-8')"))
+                 expr("decode(encode(shipper_address, 'GB2312'), 'UTF-8')"))
             .when(col("origin_country") == "KR",
-                 expr("decode(encode(shipper_address, 'UTF-8'), 'UTF-8')"))
+                 expr("decode(encode(shipper_address, 'EUC-KR'), 'UTF-8')"))
             .otherwise(col("shipper_address"))
         )
         
@@ -90,11 +90,11 @@ class InternationalShipmentProcessor:
         df = df.withColumn(
             "consignee_address_normalized",
             when(col("destination_country") == "JP",
-                 expr("decode(encode(consignee_address, 'UTF-8'), 'UTF-8')"))
+                 expr("decode(encode(consignee_address, 'Shift_JIS'), 'UTF-8')"))
             .when(col("destination_country") == "CN",
-                 expr("decode(encode(consignee_address, 'UTF-8'), 'UTF-8')"))
+                 expr("decode(encode(consignee_address, 'GB2312'), 'UTF-8')"))
             .when(col("destination_country") == "KR",
-                 expr("decode(encode(consignee_address, 'UTF-8'), 'UTF-8')"))
+                 expr("decode(encode(consignee_address, 'EUC-KR'), 'UTF-8')"))
             .otherwise(col("consignee_address"))
         )
         
@@ -108,23 +108,23 @@ class InternationalShipmentProcessor:
         # Encode product descriptions for customs systems
         df = df.withColumn(
             "product_description_encoded",
-            expr("decode(encode(product_description, 'UTF-8'), 'UTF-8')")
+            expr("decode(encode(product_description, 'ISO-8859-1'), 'UTF-8')")
         )
         
         # Process special instructions with potential unmappable characters
         df = df.withColumn(
             "special_instructions_processed",
-            expr("decode(encode(special_instructions, 'UTF-8'), 'UTF-8')")
+            expr("decode(encode(special_instructions, 'ISO-8859-1'), 'UTF-8')")
         )
         
         # Validate character encoding quality
         df = df.withColumn(
             "encoding_quality",
             when(
-                expr("decode(encode(shipper_name, 'UTF-8'), 'UTF-8')").rlike("[\\uFFFD]"),
+                expr("decode(encode(shipper_name, 'ISO-8859-1'), 'UTF-8')").rlike("[\\uFFFD]"),
                 "contains_replacement_chars"
             ).when(
-                expr("decode(encode(shipper_name, 'UTF-8'), 'UTF-8')").rlike("[\\u00C0-\\u017F]"),
+                expr("decode(encode(shipper_name, 'ISO-8859-1'), 'UTF-8')").rlike("[\\u00C0-\\u017F]"),
                 "valid_international"
             ).otherwise("ascii_only")
         )
@@ -224,10 +224,10 @@ class CarrierManifestValidator:
         return df.withColumn(
             f"{column}_validation",
             when(
-                expr(f"decode(encode({column}, 'UTF-8'), 'UTF-8')") != col(column),
+                expr(f"decode(encode({column}, 'ISO-8859-1'), 'UTF-8')") != col(column),
                 "encoding_mismatch"
             ).when(
-                expr(f"decode(encode({column}, 'UTF-8'), 'UTF-8')").contains("�"),
+                expr(f"decode(encode({column}, 'ISO-8859-1'), 'UTF-8')").contains("�"),
                 "contains_mojibake"
             ).otherwise("valid")
         )

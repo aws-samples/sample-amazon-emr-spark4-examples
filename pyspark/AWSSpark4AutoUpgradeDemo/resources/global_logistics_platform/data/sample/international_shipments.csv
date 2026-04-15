@@ -1,6 +1,6 @@
 shipment_id,origin_country,destination_country,shipper_name,shipper_address,consignee_name,consignee_address,product_description,hs_code,declared_value_usd,weight_kg,package_count,carrier_code,ship_date,estimated_delivery,customs_status,special_instructions
-SHP-001,JP,US,田中太郎,東京都渋谷区神宮前1-2-3,John Smith,123 Main St New York,Industrial equipment,8471.30,15000.50,150.5,5,FEDEX,2024-01-10,2024-01-20,PENDING,Handle with care
-SHP-002,CN,DE,王伟,北京市朝阳区建国路88号,Müller Hans,Königstraße 45 München,Electronic components,8517.12,28000.00,280.0,12,DHL,2024-01-11,2024-01-25,CLEARED,Fragile items
-SHP-003,KR,FR,김민수,서울특별시 강남구 테헤란로 123,François Léon,23 Rue de la République Paris,Textile products,6110.20,9500.00,95.2,3,UPS,2024-01-12,2024-01-22,HELD,Keep dry
-SHP-004,JP,GB,山田花子,大阪府大阪市北区梅田4-5-6,Bob Wilson,10 London Road,Machinery parts,9403.60,42000.00,420.8,20,MAERSK,2024-01-13,2024-02-10,RELEASED,Oversized cargo
-SHP-005,CN,US,李娜,上海市浦东新区陆家嘴环路100号,Alice Brown,500 Tech Blvd CA,Computer hardware,8528.72,17500.00,175.3,8,COSCO,2024-01-14,2024-02-05,PENDING,Temperature sensitive
+SHP-001,JP,US,田中太郎,東京都渋谷区,John Smith,123 Main St New York,Electronic Components,8542.31,15000.00,150.5,3,FDX,2024-01-10,2024-01-17,CLEARED,Handle with care
+SHP-002,CN,DE,王伟,北京市朝阳区,Hans Mueller,Berliner Str 45,Textile Products,6204.62,28000.00,280.0,5,DHL,2024-01-11,2024-01-20,PENDING,Keep dry
+SHP-003,KR,FR,김민수,서울특별시 강남구,Pierre Dupont,15 Rue de Paris,Auto Parts,8708.99,9500.00,95.2,2,UPS,2024-01-12,2024-01-19,CLEARED,Fragile items
+SHP-004,JP,UK,佐藤花子,大阪府大阪市,James Wilson,10 London Road,Medical Devices,9018.19,42000.00,420.8,8,FDX,2024-01-13,2024-01-22,IN_TRANSIT,Temperature controlled
+SHP-005,CN,US,李娜,上海市浦东新区,Sarah Johnson,500 Tech Blvd CA,Computer Hardware,8471.30,17500.00,175.3,4,UPS,2024-01-14,2024-01-21,CLEARED,Standard handling
