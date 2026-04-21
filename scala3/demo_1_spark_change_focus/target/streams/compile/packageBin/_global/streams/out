@@ -1,0 +1,7 @@
+[debug] Packaging /Users/chuhanl/Documents/Documents/Work/IS/mcp/4_0_test/my_test_job/target/scala-2.13/chuhanl-spark-job_2.13-1.0.jar ...
+[debug] Input file mappings:
+[debug] 	Spark3_3_Job$.class
+[debug] 	  /Users/chuhanl/Documents/Documents/Work/IS/mcp/4_0_test/my_test_job/target/scala-2.13/classes/Spark3_3_Job$.class
+[debug] 	Spark3_3_Job.class
+[debug] 	  /Users/chuhanl/Documents/Documents/Work/IS/mcp/4_0_test/my_test_job/target/scala-2.13/classes/Spark3_3_Job.class
+[debug] Done packaging.

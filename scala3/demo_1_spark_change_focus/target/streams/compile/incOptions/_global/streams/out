@@ -1,0 +1,10 @@
+[debug] Created transactional ClassFileManager with tempDir = /Users/chuhanl/Documents/Documents/Work/IS/mcp/4_0_test/my_test_job/target/scala-2.13/classes.bak
+[debug] About to delete class files:
+[debug] We backup class files:
+[debug] Created transactional ClassFileManager with tempDir = /Users/chuhanl/Documents/Documents/Work/IS/mcp/4_0_test/my_test_job/target/scala-2.13/classes.bak
+[debug] About to delete class files:
+[debug] We backup class files:
+[debug] Registering generated classes:
+[debug] 	Spark3_3_Job$.class
+[debug] 	Spark3_3_Job.class
+[debug] Removing the temporary directory used for backing up class files: /Users/chuhanl/Documents/Documents/Work/IS/mcp/4_0_test/my_test_job/target/scala-2.13/classes.bak
