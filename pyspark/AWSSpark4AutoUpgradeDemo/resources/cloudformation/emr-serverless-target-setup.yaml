@@ -1,14 +1,17 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: >
-  EMR Serverless Applications and Execution Role for Spark Upgrade Validation.
-  Creates source and target EMR Serverless applications with a shared execution role
+  Amazon EMR Serverless Applications and Execution Role for Spark Upgrade Validation.
+  WARNING: Amazon EMR Serverless applications incur charges based on vCPU and memory usage
+  during job execution. Review EMR Serverless pricing at
+  https://aws.amazon.com/emr/pricing/ before deploying.
+  Creates source and target Amazon EMR Serverless applications with a shared execution role
   for running upgrade validation jobs and data quality checks.
 
 Parameters:
   StagingBucketName:
     Type: String
     Description: >
-      Name of the S3 staging bucket created by the spark-upgrade-mcp-setup stack
+      Name of the Amazon S3 staging bucket created by the spark-upgrade-mcp-setup stack
       (found in that stack's Outputs as StagingBucketName).
     AllowedPattern: '^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$'
 
@@ -37,7 +40,7 @@ Resources:
     Type: AWS::IAM::Role
     Properties:
       RoleName: !Sub '${TargetApplicationName}-exec-role'
-      Description: Shared execution role for source and target EMR Serverless validation jobs
+      Description: Shared execution role for source and target Amazon EMR Serverless validation jobs
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -45,43 +48,57 @@ Resources:
             Principal:
               Service: emr-serverless.amazonaws.com
             Action: sts:AssumeRole
-      Policies:
-        - PolicyName: S3Access
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Sid: BucketObjectAccess
-                Effect: Allow
-                Action:
-                  - 's3:GetObject'
-                  - 's3:PutObject'
-                  - 's3:DeleteObject'
-                Resource:
-                  - !Sub 'arn:aws:s3:::${StagingBucketName}/*'
-              - Sid: BucketListAccess
-                Effect: Allow
-                Action:
-                  - 's3:ListBucket'
-                  - 's3:GetBucketLocation'
-                Resource:
-                  - !Sub 'arn:aws:s3:::${StagingBucketName}'
-        - PolicyName: CloudWatchLogs
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: Allow
-                Action:
-                  - 'logs:CreateLogGroup'
-                  - 'logs:CreateLogStream'
-                  - 'logs:PutLogEvents'
-                  - 'logs:DescribeLogStreams'
-                Resource:
-                  - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/emr-serverless:*'
-              - Effect: Allow
-                Action:
-                  - 'logs:DescribeLogGroups'
-                Resource:
-                  - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:*'
+      ManagedPolicyArns:
+        - !Ref S3AccessPolicy
+        - !Ref CloudWatchLogsPolicy
+
+  S3AccessPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Sub '${TargetApplicationName}-s3-access'
+      Description: S3 access for EMR Serverless validation jobs
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: BucketObjectAccess
+            Effect: Allow
+            Action:
+              - 's3:GetObject'       # Read input data
+              - 's3:PutObject'       # Write processed results
+              - 's3:DeleteObject'    # Clean up temporary staging files between validation runs
+            Resource:
+              - !Sub 'arn:aws:s3:::${StagingBucketName}/*'
+          - Sid: BucketListAccess
+            Effect: Allow
+            Action:
+              - 's3:ListBucket'
+              - 's3:GetBucketLocation'
+            Resource:
+              - !Sub 'arn:aws:s3:::${StagingBucketName}'
+
+  CloudWatchLogsPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Sub '${TargetApplicationName}-cw-logs'
+      Description: CloudWatch Logs access for EMR Serverless validation jobs
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: LogGroupWriteAccess
+            Effect: Allow
+            Action:
+              - 'logs:CreateLogGroup'      # Create log groups for job output
+              - 'logs:CreateLogStream'     # Create log streams per job run
+              - 'logs:PutLogEvents'        # Write application logs
+              - 'logs:DescribeLogStreams'   # List log streams for monitoring
+            Resource:
+              - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/emr-serverless:*'
+          - Sid: LogGroupDescribeAccess
+            Effect: Allow
+            Action:
+              - 'logs:DescribeLogGroups'   # Required by EMR Serverless runtime at account level
+            Resource:
+              - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:*'
 
   SourceEMRServerlessApplication:
     Type: AWS::EMRServerless::Application
