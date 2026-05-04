@@ -47,7 +47,7 @@ class HistoricalComplianceProcessor:
         pass
     
     def load_audit_records(self, input_path: str) -> DataFrame:
-        """Load historical audit records"""
+        """Load historical audit records from CSV format"""
         return self.spark.read \
             .schema(self.audit_schema) \
             .option("header", "true") \

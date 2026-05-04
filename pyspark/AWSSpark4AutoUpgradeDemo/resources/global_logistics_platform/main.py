@@ -61,6 +61,11 @@ def main():
     input_base = sys.argv[1].rstrip('/') + '/'
     output_base = sys.argv[2].rstrip('/') + '/'
     
+    for path in (input_base, output_base):
+        if not path.startswith('s3://') and not path.startswith('s3a://'):
+            print(f"Error: '{path}' is not a valid S3 URI. Paths must start with 's3://' or 's3a://'")
+            sys.exit(1)
+    
     logger = get_logger("global_logistics_platform")
     logger.info("=" * 70)
     logger.info("GLOBAL LOGISTICS PLATFORM - Starting All Pipelines")

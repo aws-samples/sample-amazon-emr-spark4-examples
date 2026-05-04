@@ -1,6 +1,6 @@
 """
 Fleet Management Domain - Vehicle Telemetry Processing
-Handles GPS tracking, fuel consumption, driver behavior analytics.
+Handles Global Positioning System (GPS) tracking, fuel consumption, driver behavior analytics.
 """
 from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql.functions import (
@@ -43,7 +43,7 @@ class VehicleTelemetryProcessor:
         ])
     
     def load_telemetry_data(self, input_path: str) -> DataFrame:
-        """Load raw telemetry data from CSV"""
+        """Load raw telemetry data from CSV format"""
         return self.spark.read \
             .schema(self.telemetry_schema) \
             .option("header", "true") \

@@ -36,7 +36,7 @@ class InternationalShipmentProcessor:
             StructField("consignee_name", StringType(), True),
             StructField("consignee_address", StringType(), True),
             StructField("product_description", StringType(), True),
-            StructField("hs_code", StringType(), True),
+            StructField("hs_code", StringType(), True),  # Harmonized System (HS) code for product classification
             StructField("declared_value_usd", DoubleType(), True),
             StructField("weight_kg", DoubleType(), True),
             StructField("package_count", IntegerType(), True),
@@ -58,7 +58,7 @@ class InternationalShipmentProcessor:
         }
     
     def load_shipment_data(self, input_path: str) -> DataFrame:
-        """Load international shipment data"""
+        """Load international shipment data from CSV format"""
         return self.spark.read \
             .option("header", "true") \
             .option("inferSchema", "true") \
