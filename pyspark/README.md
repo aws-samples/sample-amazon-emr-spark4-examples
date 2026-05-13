@@ -1,9 +1,3 @@
-# PySpark Examples
-
-This directory contains PySpark examples for Apache Spark 4 on Amazon EMR.
-
-## Examples
-
 
 # IoT Heartbeat Monitoring with Spark 4.0 transformWithState on Amazon EMR Serverless
 
@@ -61,12 +55,12 @@ The application expects JSON heartbeat messages in Kinesis with the following st
   "signal_strength": -67.2,
   "firmware_version": "2.1.0"
 }
-
-Output (Alert Schema)
+```
+## Output (Alert Schema)
 
 When a device goes offline, the following alert is published to SNS:
 
-json
+```json
 
 {
   "device_id": "device-001",
@@ -75,12 +69,14 @@ json
   "offline_duration_seconds": 45.0,
   "alert_timestamp": "2026-01-15T10:30:45"
 }
+```
 
-Deployment
+## Deployment
+
 1. Create AWS Resources
 
-bash
 
+```bash
 # Create Kinesis stream
 aws kinesis create-stream --stream-name iot-heartbeats --shard-count 2 --region us-east-1
 
@@ -89,11 +85,12 @@ aws sns create-topic --name iot-alerts --region us-east-1
 
 # Create S3 bucket for checkpoints
 aws s3 mb s3://your-bucket-name --region us-east-1
+```
 
 2. Submit Job to EMR Serverless
 
-bash
 
+```bash
 aws emr-serverless start-job-run \
   --application-id <APPLICATION_ID> \
   --execution-role-arn <ROLE_ARN> \
@@ -103,8 +100,9 @@ aws emr-serverless start-job-run \
       "sparkSubmitParameters": "--packages org.apache.spark:spark-sql-kinesis_2.13:4.0.0"
     }
   }'
+  ```
 
-How It Works
+## How It Works
 
     Ingest — Reads heartbeat events from Kinesis Data Stream in real-time
     Parse — Converts JSON payloads and handles multiple timestamp formats
@@ -114,12 +112,11 @@ How It Works
     Notify — Publishes DEVICE_OFFLINE alerts to SNS topic
     Repeat — Continues sending alerts every 60 seconds until the device comes back online
 
-Cleanup
+## Cleanup
 
 Delete resources in this order to avoid ongoing charges:
 
-bash
-
+```bash
 # 1. Stop the streaming job
 aws emr-serverless stop-job-run --application-id <APP_ID> --job-run-id <JOB_RUN_ID>
 
@@ -137,19 +134,16 @@ aws s3 rm s3://your-bucket/checkpoint-heartbeat/ --recursive
 
 # 6. Delete S3 bucket (if created for this example)
 aws s3 rb s3://your-bucket --force
+```
 
-Learning Resources
+## Security
 
-    Spark Structured Streaming Programming Guide
-    Stateful Operations in Spark
-    transformWithState API (Spark 4.0+)
-    Amazon EMR Serverless User Guide
-    Amazon Kinesis Data Streams
-    Amazon SNS Developer Guide
+See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more information.
 
-Security
+## License
 
-See CONTRIBUTING for more information.
-License
+This library is licensed under the MIT-0 License. See the LICENSE file.
 
-This sample code is made available under the MIT-0 license. See the LICENSE file.
+## Disclaimer
+
+These examples are provided for educational and reference purposes. They are not production-ready and are not covered by AWS Support. Please review and test thoroughly before using in your own environments.
