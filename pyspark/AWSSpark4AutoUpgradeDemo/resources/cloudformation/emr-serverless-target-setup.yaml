@@ -32,8 +32,8 @@ Parameters:
 
   TargetReleaseLabel:
     Type: String
-    Default: 'emr-spark-8.0-preview'
-    Description: EMR release label for the target Spark version (e.g., emr-spark-8.0-preview for Spark 4.0.1)
+    Default: 'emr-spark-8.0.0'
+    Description: EMR release label for the target Spark version (e.g., emr-spark-8.0.0 for Spark 4.0.1)
 
 Resources:
   EMRServerlessExecutionRole:
