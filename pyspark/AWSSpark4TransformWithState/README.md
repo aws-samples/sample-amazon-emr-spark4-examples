@@ -73,8 +73,7 @@ When a device goes offline, the following alert is published to SNS:
 
 ## Deployment
 
-1. Create AWS Resources
-
+### Step 1: Create AWS Resources
 
 ```bash
 # Create Kinesis stream
@@ -87,8 +86,51 @@ aws sns create-topic --name iot-alerts --region us-east-1
 aws s3 mb s3://your-bucket-name --region us-east-1
 ```
 
-2. Submit Job to EMR Serverless
+### Step 2: Create the EMR Serverless application with custom Spark 4.0 image
 
+This solution uses a custom Docker image that includes Spark streaming dependencies. Follow these steps:
+
+#### 2.1 Create ECR repository and push the image
+
+Download the [Spark 4.0 custom image archive](https://aws-blogs-artifacts-public.s3.us-east-1.amazonaws.com/artifacts/BDB-5849/spark4-variant-latest.tar.gz), load it into Docker, then create a private ECR repository and push the image. For detailed steps, see [Pushing a Docker image to an Amazon ECR private repository](https://docs.aws.amazon.com/AmazonECR/latest/userguide/docker-push-ecr-image.html).
+
+```bash
+# Load the image archive
+docker load -i spark4-variant-latest.tar.gz
+
+# Tag and push to ECR
+docker tag spark4-variant:latest <ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com/spark4-variant:latest
+docker push <ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com/spark4-variant:latest
+```
+
+#### 2.2 Grant EMR Serverless access to the image
+Add the required ECR repository policy following [Customizing an EMR Serverless image — Allow EMR Serverless to access the custom image repository](https://docs.aws.amazon.com/emr/latest/EMR-Serverless-UserGuide/application-custom-image.html).
+
+#### 2.3 Create EMR Serverless application
+
+```bash
+aws emr-serverless create-application \  
+--name "iot-heartbeat-monitor" \  
+--release-label "emr-spark-8.0.0" \
+--type "SPARK" \
+--network-configuration '{    
+  "subnetIds": ["subnet-xxxxx", "subnet-yyyyy"],    
+  "securityGroupIds": ["sg-zzzzz"]
+  }' \   
+--image-configuration '{ "imageUri": "<ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com/spark4-variant:latest"}' \
+--region us-east-1
+```
+
+Note the `applicationId` from the output for use in subsequent steps.
+
+### Step 3: Upload external dependencies
+
+Download the required dependencies and upload them to your S3 bucket:
+
+- [Spark-Kinesis-connector JAR](https://aws-blogs-artifacts-public.s3.us-east-1.amazonaws.com/artifacts/BDB-5849/spark-streaming-sql-kinesis-connector_2.13-2.0.0-SNAPSHOT.jar) → `s3://your-bucket/jars/spark-kinesis-connector.jar`
+- [Protobuf dependency](https://aws-blogs-artifacts-public.s3.us-east-1.amazonaws.com/artifacts/BDB-5849/protobuf_pkg.tar) → `s3://your-bucket/pyfiles/protobuf_pkg.tar.gz`
+
+### Step 4: Submit Job to EMR Serverless
 
 ```bash
 aws emr-serverless start-job-run \
@@ -100,7 +142,7 @@ aws emr-serverless start-job-run \
       "sparkSubmitParameters": "--packages org.apache.spark:spark-sql-kinesis_2.13:4.0.0"
     }
   }'
-  ```
+```
 
 ## How It Works
 
